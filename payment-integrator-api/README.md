@@ -20,6 +20,69 @@ Hexagonal (Ports & Adapters), organized by layer at the top level of `src/`:
 
 Controllers decide the HTTP status from the `Result` via a single mapping point ([`to-http-exception.ts`](src/infrastructure/http/to-http-exception.ts)): `*_NOT_FOUND` → 404, business conflicts (`INSUFFICIENT_STOCK`, `TRANSACTION_ALREADY_PROCESSED`) → 409.
 
+## Modelo de datos
+
+Definido en [`prisma/schema.prisma`](prisma/schema.prisma).
+
+```mermaid
+erDiagram
+    PRODUCT ||--o{ TRANSACTION : "is purchased in"
+    CUSTOMER ||--o{ TRANSACTION : "places"
+    CUSTOMER ||--o{ DELIVERY : "receives"
+    TRANSACTION ||--o| DELIVERY : "generates"
+
+    PRODUCT {
+        string id PK
+        string name
+        string description
+        int price "COP cents"
+        string imageUrl
+        int stock
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    CUSTOMER {
+        string id PK
+        string name
+        string email UK
+        string documentId UK
+        string phone
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    TRANSACTION {
+        string id PK
+        string reference UK
+        string productId FK
+        string customerId FK
+        int amount "total charged, COP cents"
+        int baseFee "COP cents"
+        int deliveryFee "COP cents"
+        TransactionStatus status "PENDING, APPROVED, DECLINED, ERROR"
+        string gatewayTransactionId UK "nullable"
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    DELIVERY {
+        string id PK
+        string transactionId FK "unique, one delivery per transaction"
+        string customerId FK
+        string address
+        string city
+        DeliveryStatus status "PENDING, SHIPPED, DELIVERED"
+        datetime createdAt
+        datetime updatedAt
+    }
+```
+
+- **Product** — catalog item available for purchase, with its price (in COP cents) and current `stock`. Each transaction references the single product it's paying for.
+- **Customer** — the buyer, identified uniquely by `email` and `documentId`. A customer can accumulate multiple transactions and deliveries over time.
+- **Transaction** — the record of a purchase attempt: links one `Product` to one `Customer`, carries the computed `amount` (`baseFee` + `deliveryFee`), and tracks its lifecycle through `TransactionStatus` as it's created `PENDING` and later resolved against the payment gateway (`gatewayTransactionId` correlates it with the gateway's own record).
+- **Delivery** — created only once a transaction is `APPROVED`; holds the shipping `address`/`city` and its own `DeliveryStatus` lifecycle, independent of the payment status. The `transactionId` unique constraint enforces at most one delivery per transaction.
+
 ## Setup
 
 ### 1. Environment variables
