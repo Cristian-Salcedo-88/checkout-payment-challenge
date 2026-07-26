@@ -1,0 +1,20 @@
+.backdrop-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 900;
+  padding: 1rem;
+}
+
+.backdrop-content {
+  background: #fff;
+  color: #1a1a2e;
+  width: 100%;
+  max-width: 400px;
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}

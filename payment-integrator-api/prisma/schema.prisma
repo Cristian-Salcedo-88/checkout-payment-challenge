@@ -1,0 +1,91 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum TransactionStatus {
+  PENDING
+  APPROVED
+  DECLINED
+  ERROR
+}
+
+enum DeliveryStatus {
+  PENDING
+  SHIPPED
+  DELIVERED
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  description String
+  price       Int // COP cents
+  imageUrl    String   @map("image_url")
+  stock       Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  transactions Transaction[]
+
+  @@map("products")
+}
+
+model Customer {
+  id         String   @id @default(uuid())
+  name       String
+  email      String   @unique
+  documentId String   @unique @map("document_id")
+  phone      String
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  transactions Transaction[]
+  deliveries   Delivery[]
+
+  @@map("customers")
+}
+
+model Transaction {
+  id                   String            @id @default(uuid())
+  reference            String            @unique
+  productId            String            @map("product_id")
+  customerId           String            @map("customer_id")
+  amount               Int // total charged, COP cents
+  baseFee              Int               @map("base_fee") // COP cents
+  deliveryFee          Int               @map("delivery_fee") // COP cents
+  status               TransactionStatus @default(PENDING)
+  gatewayTransactionId String?           @unique @map("gateway_transaction_id")
+  createdAt            DateTime          @default(now()) @map("created_at")
+  updatedAt            DateTime          @updatedAt @map("updated_at")
+
+  product  Product   @relation(fields: [productId], references: [id])
+  customer Customer  @relation(fields: [customerId], references: [id])
+  delivery Delivery?
+
+  @@index([productId])
+  @@index([customerId])
+  @@map("transactions")
+}
+
+model Delivery {
+  id            String         @id @default(uuid())
+  transactionId String         @unique @map("transaction_id")
+  customerId    String         @map("customer_id")
+  address       String
+  city          String
+  status        DeliveryStatus @default(PENDING)
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+  customer    Customer    @relation(fields: [customerId], references: [id])
+
+  @@index([customerId])
+  @@map("deliveries")
+}

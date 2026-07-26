@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: payment-integrator-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: payment_integrator
+    ports:
+      - "5432:5432"
+    volumes:
+      - payment_integrator_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d payment_integrator"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  payment_integrator_postgres_data:
