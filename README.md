@@ -286,15 +286,3 @@ npm run test
 ```
 
 No hay script de cobertura configurado para el frontend todavía (`package.json` solo define `test` y `test:watch`).
-
-## Despliegue
-
-_Pendiente — se completa cuando hagamos el deploy._
-
-- API: `TODO`
-- WebUI: `TODO`
-- Variables de entorno de producción: `TODO`
-
-## Entorno sandbox, sin dinero real
-
-Todo el flujo de pago corre contra el ambiente **sandbox/UAT** del proveedor de pagos, con llaves de prueba (`PAYMENT_GATEWAY_*` en `.env`, nunca reales). Ninguna transacción de este proyecto mueve dinero real; las tarjetas usadas para probar son tarjetas de prueba documentadas por el proveedor para su sandbox.
